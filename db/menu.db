@@ -1,0 +1,10 @@
+{"name":"Skyland Breakfast","price":250,"category":"Breakfast","icon":"B","description":"Eggs, toast, bacon and fresh juice","available":true,"_id":"GwxJx2yTGoLcXJI4"}
+{"name":"Grilled Salmon","price":450,"category":"Main Course","icon":"F","description":"Atlantic salmon with herbs and lemon","available":true,"_id":"lDxfShdkkNRxA95Q"}
+{"name":"Caesar Salad","price":200,"category":"Main Course","icon":"S","description":"Fresh romaine, croutons and parmesan","available":true,"_id":"576zfuOuvp1zDy25"}
+{"name":"Chocolate Lava Cake","price":180,"category":"Desserts","icon":"C","description":"Warm chocolate with vanilla ice cream","available":true,"_id":"CYwiuKTQoU64yiJX"}
+{"name":"Fresh Mango Shake","price":150,"category":"Beverages","icon":"M","description":"100% fresh local mango","available":true,"_id":"sP0urNujReES7TZF"}
+{"name":"Club Sandwich","price":220,"category":"Snacks","icon":"W","description":"Triple-decker with fries","available":true,"_id":"u90WGpEYXfvcuI0d"}
+{"name":"Beef Sinigang","price":380,"category":"Main Course","icon":"Z","description":"Classic Filipino sour soup","available":true,"_id":"prc1y401axYOurIX"}
+{"name":"Leche Flan","price":120,"category":"Desserts","icon":"L","description":"Silky caramel custard","available":true,"_id":"b0GT95fFupLijJzj"}
+{"name":"Buko Pandan Shake","price":110,"category":"Beverages","icon":"P","description":"Refreshing coconut pandan drink","available":true,"_id":"oHPxHE8twnqtvaZn"}
+{"name":"Pancit Canton","price":280,"category":"Main Course","icon":"N","description":"Stir-fried noodles with vegetables","available":true,"_id":"9iU6Afvew9M5UiTv"}
