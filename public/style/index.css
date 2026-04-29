@@ -10,6 +10,7 @@
   --red: #e74c3c;
   --border: #2a2a40;
 }
+
 * {
   margin: 0;
   padding: 0;
@@ -22,13 +23,16 @@ body {
   color: var(--text);
   min-height: 100vh;
 }
+
 .page {
   display: none;
   min-height: 100vh;
 }
-.page .active {
+
+.page.active {
   display: block;
 }
+
 nav {
   background: var(--dark);
   border-bottom: 2px solid var(--gold);
