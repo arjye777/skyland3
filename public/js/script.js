@@ -173,15 +173,20 @@ function calcTotal() {
   if (ci && co && new Date(co) > new Date(ci)) {
     const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
     const total = currentBookPrice * nights;
-    el.textContent = `Estimated Total: ₱${total.toLocaleString()} — ${nights} night${nights > 1 ? "s" : ""}`;
+    el.textContent = `💰 Estimated Total: ₱${total.toLocaleString()} (${nights} night${nights > 1 ? "s" : ""})`;
     el.style.display = "block";
   } else {
     el.style.display = "none";
   }
 }
 
-document.getElementById("bm-ci")?.addEventListener("change", calcTotal);
-document.getElementById("bm-co")?.addEventListener("change", calcTotal);
+// Attach event listeners when DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+  const ciInput = document.getElementById("bm-ci");
+  const coInput = document.getElementById("bm-co");
+  if (ciInput) ciInput.addEventListener("change", calcTotal);
+  if (coInput) coInput.addEventListener("change", calcTotal);
+});
 
 async function confirmBooking() {
   const checkin = document.getElementById("bm-ci").value;
@@ -190,6 +195,10 @@ async function confirmBooking() {
   const special_request = document.getElementById("bm-special").value;
   if (!checkin || !checkout) {
     toast("Please select check-in and check-out dates", "err");
+    return;
+  }
+  if (new Date(checkout) <= new Date(checkin)) {
+    toast("Check-out must be after check-in", "err");
     return;
   }
   const r = await api("POST", "/api/bookings", {
@@ -205,8 +214,9 @@ async function confirmBooking() {
     toast(r.msg + " 🎉");
     document.getElementById("bm-special").value = "";
     await loadMyBookings();
-    const mybkTab = document.querySelectorAll(".tab")[2];
-    if (mybkTab) switchTab(mybkTab, "mybk");
+    // Switch to My Bookings tab
+    const tabs = document.querySelectorAll(".tab");
+    if (tabs[2]) switchTab(tabs[2], "mybk");
   } else {
     toast(r.msg || "Booking failed", "err");
   }
@@ -225,20 +235,20 @@ async function loadMyBookings() {
     .map(
       (b) => `
     <div class="bk-item">
-      <div class="bk-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
         <div>
-          <div class="bk-title">${b.room}</div>
+          <div style="font-size:1.1rem;font-weight:600;color:var(--gold)">${b.room}</div>
           <span class="chip" style="font-size:.68rem; margin-top:4px; display:inline-block;">${b.id || b._id}</span>
         </div>
-        <span class="sb sb-${b.status === "Confirmed" ? "confirmed" : b.status === "Cancelled" ? "cancelled" : "pending"}">${b.status || "Pending"}</span>
+        <span class="sb sb-${b.status === "Confirmed" ? "confirmed" : "pending"}">${b.status || "Pending"}</span>
       </div>
       <div class="bk-grid">
-        <div class="bk-field"><label>Check-in</label><span>${b.checkin}</span></div>
-        <div class="bk-field"><label>Check-out</label><span>${b.checkout}</span></div>
-        <div class="bk-field"><label>Guests</label><span>${b.guests}</span></div>
-        <div class="bk-field"><label>Total</label><span style="color:var(--gold-light);font-weight:700;font-family:'Cormorant Garamond',serif;font-size:1.1rem">₱${Number(b.total_price).toLocaleString()}</span></div>
+        <div class="bk-field"><label>📅 Check-in</label><span>${b.checkin}</span></div>
+        <div class="bk-field"><label>📅 Check-out</label><span>${b.checkout}</span></div>
+        <div class="bk-field"><label>👥 Guests</label><span>${b.guests}</span></div>
+        <div class="bk-field"><label>💰 Total</label><span style="color:var(--gold);font-weight:700;font-size:1.1rem">₱${Number(b.total_price).toLocaleString()}</span></div>
       </div>
-      ${b.special_request ? `<p style="margin-top:12px;color:var(--muted);font-size:.82rem;background:var(--surface2);padding:10px 14px;border-radius:2px;border-left:2px solid var(--border2)">📝 ${b.special_request}</p>` : ""}
+      ${b.special_request ? `<p style="margin-top:12px;color:var(--muted);font-size:.85rem;background:var(--darker);padding:10px 14px;border-radius:8px;border-left:2px solid var(--gold)">📝 ${b.special_request}</p>` : ""}
     </div>`,
     )
     .join("");
@@ -281,11 +291,11 @@ async function loadMyRequests() {
       (req) => `
     <div class="req-card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="color:var(--ivory);font-weight:600;font-size:.92rem">${req.type}</span>
+        <span style="color:var(--gold);font-weight:600;font-size:.95rem">${req.type}</span>
         <span class="sb ${req.status === "Resolved" ? "sb-confirmed" : "sb-pending"}">${req.status || "Pending"}</span>
       </div>
-      <p style="margin-top:10px;color:var(--ivory-dim);font-size:.85rem;line-height:1.6">${req.detail}</p>
-      ${req.admin_note ? `<p style="margin-top:8px;color:var(--gold-light);font-size:.82rem;padding:8px 12px;background:var(--surface2);border-radius:2px">💬 ${req.admin_note}</p>` : ""}
+      <p style="margin-top:10px;color:var(--muted);font-size:.88rem;line-height:1.5">${req.detail}</p>
+      ${req.admin_note ? `<p style="margin-top:8px;color:var(--gold);font-size:.85rem;padding:8px 12px;background:var(--darker);border-radius:8px">💬 Admin: ${req.admin_note}</p>` : ""}
       <p style="margin-top:8px;font-size:.72rem;color:var(--muted);letter-spacing:.5px">📅 ${req.created_at}</p>
     </div>`,
     )
@@ -325,14 +335,16 @@ async function sendChat() {
   const input = document.getElementById("chat-in");
   const message = input.value.trim();
   if (!message) return;
+
   addChatMessage(message, "user");
   input.value = "";
 
   const msg = message.toLowerCase();
   let response = "";
 
+  // Booking intent
   if (
-    msg.includes("book") &&
+    (msg.includes("book") || msg.includes("reserve")) &&
     (msg.includes("room") ||
       msg.includes("normal") ||
       msg.includes("suite") ||
@@ -346,44 +358,84 @@ async function sendChat() {
       response =
         "✨ I can help you book a room!\n\nWhich room would you like?\n• Normal Room (₱1,500/night)\n• Suite Room (₱3,500/night)\n• Deluxe Room (₱2,800/night)\n• King's Room (₱5,500/night)\n\nClick 'Reserve Room' on any room in the Book Rooms tab!";
     }
-  } else if (msg.includes("available") || msg.includes("any room")) {
+  }
+  // Availability
+  else if (
+    msg.includes("available") ||
+    msg.includes("any room") ||
+    msg.includes("vacancy")
+  ) {
     response =
-      "🏨 Available Rooms:\n\n• Normal Room — ₱1,500/night\n• Suite Room — ₱3,500/night\n• Deluxe Room — ₱2,800/night\n• King's Room — ₱5,500/night\n\nAll rooms include WiFi, AC, and 24/7 service!";
-  } else if (msg.includes("my booking") || msg.includes("my reservation")) {
+      "🏨 **Available Rooms:**\n\n• Normal Room — ₱1,500/night\n• Suite Room — ₱3,500/night\n• Deluxe Room — ₱2,800/night\n• King's Room — ₱5,500/night\n\nAll rooms include free WiFi, AC, and 24/7 concierge service!";
+  }
+  // View bookings
+  else if (
+    msg.includes("my booking") ||
+    msg.includes("my reservation") ||
+    (msg.includes("view") && msg.includes("booking"))
+  ) {
     response = !currentUser
       ? "🔐 Please login to view your bookings!"
-      : "📋 Go to the 'My Bookings' tab to see all your reservations!";
-  } else if (msg.includes("check in") || msg.includes("checkin")) {
+      : "📋 Go to the 'My Bookings' tab to see all your reservations! You can view, modify, or cancel them there.";
+  }
+  // Check-in/out
+  else if (msg.includes("check in") || msg.includes("checkin")) {
     response =
-      "✅ Check-in: 2:00 PM\nCheck-out: 12:00 PM (noon)\n\nEarly check-in and late check-out available upon request!";
-  } else if (msg.includes("pool")) {
+      "✅ **Check-in:** 2:00 PM\n**Check-out:** 12:00 PM (noon)\n\nEarly check-in and late check-out are available upon request! Just submit a request in the Requests tab.";
+  }
+  // Pool
+  else if (msg.includes("pool")) {
     response =
-      "🏊 Infinity Pool\n📍 10th Floor · Open 6 AM – 9 PM\nPool towels provided!";
-  } else if (msg.includes("wifi")) {
+      "🏊 **Infinity Pool**\n📍 10th Floor\n⏰ Open 6:00 AM – 9:00 PM\n🧺 Pool towels are provided at the pool deck!";
+  }
+  // WiFi
+  else if (msg.includes("wifi")) {
     response =
-      "📶 Free WiFi throughout the hotel!\nNetwork: 'Skyland_Guest' — no password needed.";
-  } else if (
+      "📶 **Free WiFi** throughout the hotel!\nNetwork: 'Skyland_Guest'\nNo password required!";
+  }
+  // Restaurant/Food
+  else if (
     msg.includes("restaurant") ||
     msg.includes("food") ||
-    msg.includes("order")
+    msg.includes("order") ||
+    msg.includes("menu")
   ) {
     response =
-      "🍽️ Skyland Restaurant\n⏰ 6:00 AM – 10:00 PM · 📍 2nd Floor\n\nGo to the Restaurant tab to view our menu and place an order!";
-  } else if (
+      "🍽️ **Skyland Restaurant**\n⏰ 6:00 AM – 10:00 PM\n📍 2nd Floor\n\nGo to the **Restaurant tab** to view our full menu and place an order! We deliver to your room, the dining hall, or poolside.";
+  }
+  // Prices
+  else if (
     msg.includes("price") ||
     msg.includes("cost") ||
-    msg.includes("rate")
+    msg.includes("rate") ||
+    msg.includes("how much")
   ) {
     response =
-      "💰 Room Rates (per night):\n• Normal Room: ₱1,500\n• Suite Room: ₱3,500\n• Deluxe Room: ₱2,800\n• King's Room: ₱5,500\n\nAll taxes and fees included.";
-  } else if (msg.includes("cancel")) {
+      "💰 **Room Rates (per night):**\n• Normal Room: ₱1,500\n• Suite Room: ₱3,500\n• Deluxe Room: ₱2,800\n• King's Room: ₱5,500\n\nAll taxes and service fees are already included!";
+  }
+  // Cancellation
+  else if (msg.includes("cancel")) {
     response =
-      "To cancel a booking, go to the 'My Bookings' tab or contact front desk at +63 34 729 0000.";
-  } else if (msg.includes("thank")) {
-    response = "You're very welcome! 😊 Enjoy your stay at Skyland Hotel. ✨";
-  } else {
+      "❌ To cancel a booking, please go to the 'My Bookings' tab or contact our front desk at +63 34 729 0000. Our team will assist you with the cancellation policy.";
+  }
+  // Amenities
+  else if (
+    msg.includes("amenities") ||
+    msg.includes("facilities") ||
+    msg.includes("services")
+  ) {
     response =
-      "I can help you with:\n• 🛏️ Room bookings & rates\n• 🍽️ Restaurant & orders\n• 📋 Your reservations\n• 🏊 Amenities & facilities\n• ⏰ Check-in / check-out times\n\nWhat would you like to know?\n\n📞 Call +63 34 729 0000 for immediate assistance.";
+      "🏨 **Skyland Hotel Amenities:**\n• 🏊 Infinity Pool\n• 🏋️ 24/7 Fitness Center\n• 🍽️ Restaurant & Bar\n• 💆 Spa & Wellness\n• 🅿️ Free Parking\n• 📶 Free WiFi\n• 🛎️ 24/7 Concierge\n• 🚗 Airport Transfer";
+  }
+  // Thank you
+  else if (msg.includes("thank")) {
+    response =
+      "You're very welcome! 😊 Thank you for choosing Skyland Hotel. Is there anything else I can help you with? ✨";
+  }
+  // Default / Help
+  else {
+    response =
+      "🤖 **Skyland Assistant**\n\nI can help you with:\n• 🛏️ **Room bookings & rates** — 'Book a Suite Room'\n• 🍽️ **Restaurant & orders** — 'How to order food?'\n• 📋 **Your reservations** — 'Show my bookings'\n• 🏊 **Amenities & facilities** — 'Pool hours?'\n• ⏰ **Check-in / Check-out times**\n• 📝 **Special requests** — 'Need extra towels'\n\nWhat would you like to know?\n\n📞 Call +63 34 729 0000 for immediate assistance.";
   }
 
   setTimeout(() => addChatMessage(response, "bot"), 300);
@@ -391,12 +443,29 @@ async function sendChat() {
 
 // ============ INITIALIZATION ============
 window.addEventListener("load", async () => {
+  // Check if user is already logged in
   const r = await api("GET", "/api/auth/me");
   if (r.ok && r.user) {
     currentUser = r.user;
     enterDashboard();
   }
+
+  // Set min date for booking calendar
   const today = new Date().toISOString().split("T")[0];
   const ciInput = document.getElementById("bm-ci");
   if (ciInput) ciInput.min = today;
 });
+
+// Make functions globally available for inline onclick handlers
+window.showPage = showPage;
+window.switchTab = switchTab;
+window.doRegister = doRegister;
+window.doLogin = doLogin;
+window.doLogout = doLogout;
+window.openBook = openBook;
+window.closeModal = closeModal;
+window.confirmBooking = confirmBooking;
+window.placeOrder = placeOrder;
+window.submitRequest = submitRequest;
+window.toggleChat = toggleChat;
+window.sendChat = sendChat;
