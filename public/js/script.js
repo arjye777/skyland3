@@ -261,12 +261,14 @@ async function submitRequest() {
     showPage("p-login");
     return;
   }
+
   const type = document.getElementById("req-type").value;
   const detail = document.getElementById("req-detail").value;
   if (!detail.trim()) {
     toast("Please provide request details", "err");
     return;
   }
+
   const r = await api("POST", "/api/requests", { type, detail });
   if (r.ok) {
     toast(r.msg);
